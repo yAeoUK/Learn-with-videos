@@ -7,7 +7,7 @@ import 'package:admob_flutter/admob_flutter.dart';
    const String Last_Channels_Fitch= 'lastChannelsFitch';
    const String NOTIFY_NEW_CHANNEL='notifyNewChannel';
    const String DATABASE_NAME='my_db.db';
-   const int DATABASE_VERSION=1;
+   const int DATABASE_VERSION=2;
    Database database;
 
    const ROOT_URL='http://learnspanishenglish.atwebpages.com'+'//';
@@ -60,6 +60,7 @@ import 'package:admob_flutter/admob_flutter.dart';
    const DATA_RECEIVED_THANKS='Data is received, thanks for contributing in making the app better';
    const ERROR='Error';
    const PLEASE_TRY_AGAIN_LATER='Please try again later';
+   const PRO=true;
 
    String doubleDigit(int digit){
     if(digit<10)return '0'+digit.toString();
@@ -74,14 +75,4 @@ import 'package:admob_flutter/admob_flutter.dart';
    void launchURL(String url)async{
     if(await canLaunch(url))await launch(url);
     else throw('can not launch url');
-  }
-
-  class AdmobAdd extends StatelessWidget{
-    @override
-  Widget build(BuildContext context) {
-    return AdmobBanner(
-              adUnitId: BANNER_AD_UNIT_ID,
-              adSize: AdmobBannerSize.BANNER,
-              );
-  }
   }

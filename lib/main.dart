@@ -1,4 +1,7 @@
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:catcher/catcher.dart';
+import 'package:dynamic_theme/dynamic_theme.dart';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:videos/c.dart';
@@ -7,6 +10,7 @@ import 'package:videos/database.dart';
 import 'home.dart';
 
 void main() {
+  FirebaseAdMob.instance.initialize(appId: APP_ID);
   CatcherOptions debugOptions =CatcherOptions(DialogReportMode(), [ConsoleHandler()]);
   CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
     EmailManualHandler(["ahmad.rajab@windowslive.com"])
@@ -39,14 +43,41 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     configureDatabase();
-    return MaterialApp(
-      navigatorKey: Catcher.navigatorKey,
-      title: APP_NAME,
-      theme: ThemeData(
+    return DynamicTheme(
+      defaultBrightness: Brightness.light,
+      data: (brightness) => ThemeData(
         primarySwatch: PRIMARY_COLOR,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        brightness: brightness
       ),
-      home: MyHomePage(),
+      themedWidgetBuilder: (context, data) {
+        return MaterialApp(
+          navigatorKey: Catcher.navigatorKey,
+          title: APP_NAME,
+          theme: data,
+          home: MyHomePage(),
+        );
+      },
     );
   }
 }
+
+MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
+  gender: MobileAdGender.unknown,
+  designedForFamilies: true,
+  childDirected: true
+);
+
+class AdmobAdd extends StatelessWidget{
+    @override
+  Widget build(BuildContext context) {
+    return !PRO?AdmobBanner(
+              adUnitId: BANNER_AD_UNIT_ID,
+              adSize: AdmobBannerSize.BANNER,
+              ):Container();
+  }
+  }
+
+InterstitialAd myInterstitial = InterstitialAd(
+  adUnitId: InterstitialAd.testAdUnitId,
+  targetingInfo: targetingInfo,
+);
