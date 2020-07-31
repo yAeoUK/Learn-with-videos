@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:admob_flutter/admob_flutter.dart';
 
 
    const String Last_Channels_Fitch= 'lastChannelsFitch';
@@ -17,7 +16,7 @@ import 'package:admob_flutter/admob_flutter.dart';
    const RATE_THE_APP='Rate the app';
    const SHARE='Share';
    const MORE_APPS='More apps';
-   const TRY_THE_APPLICATION='Try learning Spanish with videos app https://play.google.com/store/apps/details?id=com.atwebpages.learnspanishenglish';
+   const TRY_THE_APPLICATION='Try learning Spanish with videos app $APP_LINK';
    const NOTIFICATIONS='Notifications';
    const NOTIFY_WHEN_NEW_CHANNELS_ARE_AVAILABELE='Notify when new channels are available';
    const NEW_CHANNEL='New channel';
@@ -61,6 +60,7 @@ import 'package:admob_flutter/admob_flutter.dart';
    const ERROR='Error';
    const PLEASE_TRY_AGAIN_LATER='Please try again later';
    const PRO=true;
+   const APP_LINK='https://play.google.com/store/apps/details?id=com.atwebpages.learnspanishenglish.pro';
 
    String doubleDigit(int digit){
     if(digit<10)return '0'+digit.toString();

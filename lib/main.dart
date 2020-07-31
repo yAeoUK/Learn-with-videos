@@ -9,8 +9,10 @@ import 'package:videos/database.dart';
 
 import 'home.dart';
 
-void main() {
-  FirebaseAdMob.instance.initialize(appId: APP_ID);
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await FirebaseAdMob.instance.initialize(appId: APP_ID);
+  Admob.initialize(APP_ID);
   CatcherOptions debugOptions =CatcherOptions(DialogReportMode(), [ConsoleHandler()]);
   CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
     EmailManualHandler(["ahmad.rajab@windowslive.com"])
