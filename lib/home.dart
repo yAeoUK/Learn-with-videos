@@ -1,6 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:videos/c.dart';
+import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:videos/VideoList.dart';
+import 'package:videos/c.dart';
+import 'package:videos/database.dart';
+import 'package:videos/main.dart';
+import 'package:videos/post.dart';
 import 'home_drawer.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -8,7 +15,127 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+class Channel{
+    final String name,pictureUrl,url;
+    final int viewed;
+    Channel({this.name,this.pictureUrl,this.url,this.viewed});
+  }
+
 class _MyHomePageState extends State<MyHomePage> {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance
+      .addPostFrameCallback((_) => _refreshIndicatorKey.currentState.show());
+      showRateAppMessage();
+  }
+
+  void showRateAppMessage()async{
+    int askLater=0,never=-1,ok=1;
+    var reference=await SharedPreferences.getInstance();
+    if(reference.getInt('rateApp')??askLater==askLater){
+      int count=reference.getInt('count')??0;
+      if(count<5)reference.setInt('count', count+1);
+      else {
+        reference.setInt('count', 0);
+        showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext build){
+                          return AlertDialog(
+                            title: Text(RATE_THE_APP),
+                            content: Text(PLEASE_RATE_THE_APP),
+                            actions: <Widget>[
+                              FlatButton(
+                                child: Text(OK),
+                                onPressed:(){
+                                  Navigator.pop(context);
+                                  reference.setInt('rateApp', ok);
+                                  launchURL(APP_LINK);
+                                } ,
+                              ),
+                              FlatButton(
+                                child: Text(ASK_LATER),
+                                onPressed:(){
+                                  Navigator.pop(context);
+                                } ,
+                              ),
+                              FlatButton(
+                                child: Text(NEVER),
+                                onPressed:(){
+                                  Navigator.pop(context);
+                                  reference.setInt('rateApp', never);
+                                } ,
+                              )
+                            ],
+                          );
+                        }
+                      );
+   
+      }
+    }
+  }
+
+ GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  List<Channel> channels=List<Channel>();
+
+  Future<void> getChannelsData() async {
+    await MyApp.configureDatabase();
+    channels.clear();
+    var databaseData=await MyApp.database.rawQuery('select * from $CHANNELS');
+    for(int c=0;c<databaseData.length;c++){
+      channels.add(
+        Channel(
+          name: databaseData[c][NAME],
+          pictureUrl: databaseData[c][PICTURE_LINK],
+          url:databaseData[c][LINK],
+          viewed: databaseData[c][VIEWED]
+        )
+      );
+    }
+    if(databaseData.length>0)setState(() {});
+
+    var preferences=await SharedPreferences.getInstance();
+    var last=preferences.getInt('lastChannelsFitch')??0;
+    var dateTime=DateTime.fromMillisecondsSinceEpoch(last).toUtc();
+    var dateTimeSqlString =toSQLDateTimeString(dateTime);
+    var map=Map();
+    map['lastChannelsFitch']=dateTimeSqlString;
+
+    var databaseNetworkData=await Post(context,'fitchNewChannels.php',map).fetchPost();
+    List<dynamic> databaseNetworkJson= json.decode(databaseNetworkData);
+    for(int c=0;c<databaseNetworkJson.length;c++){
+      String channelId=databaseNetworkJson[c]['id'];
+      var v=await MyApp.database.rawQuery('select * from $CHANNELS where id = $channelId');
+      if(v.length==0){
+        Channel channel=Channel(
+            name:databaseNetworkJson[c]['name'],
+            pictureUrl:databaseNetworkJson[c]['pictureLink'],
+            url:databaseNetworkJson[c]['link'],
+            viewed: 0
+          );
+        channels.add(channel);
+        await MyApp.database.rawInsert('insert into $CHANNELS ($NAME,$LINK,$PICTURE_LINK,$ID) values (\'${channel.name}\' , \'${channel.url}\', \'${channel.pictureUrl}\',$channelId )');
+      }
+      else {
+        Channel channel=Channel(
+            name:databaseNetworkJson[c]['name'],
+            pictureUrl:databaseNetworkJson[c]['pictureLink'],
+            url:databaseNetworkJson[c]['link'],
+          );
+          for(int c=0;c<channels.length;c++)if(channels[c].url==channel.url){
+              channels[c]=channel;
+              break;
+          }
+          await MyApp.database.rawUpdate('update $CHANNELS set $NAME = \'${channel.name}\' , $LINK = \'${channel.url}\', $PICTURE_LINK = \'${channel.pictureUrl}\' where $ID = $channelId');
+      }
+
+    }
+
+    setState(() {});
+    preferences.setInt('lastChannelsFitch', DateTime.now().toUtc().millisecondsSinceEpoch);
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -18,6 +145,69 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       drawer: Drawer(
         child: MainDrawer(),
+      ),
+      body: RefreshIndicator(
+            onRefresh: getChannelsData,
+            key: _refreshIndicatorKey,
+            child: Column(
+        children: <Widget>[
+          AdmobAdd(),
+          ListView(
+              shrinkWrap: true,
+                children: <Widget>[
+                  GridView.builder(
+                    shrinkWrap: true,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                    itemCount: channels.length,
+                    itemBuilder:(context,index){
+                      return GestureDetector(
+                        onTap: (){
+                          Navigator.push(context,MaterialPageRoute(builder: (context) => VideoListPage(channel:channels[index] ,)));
+                        },
+                        child: Card(
+                          child: Column(
+                            children: <Widget>[
+                                Expanded(
+                                  flex: 3,
+                                  child: Container(
+                                    padding: EdgeInsets.all(SEPARATOR_PADDING/2),
+                                    child: ClipOval(
+                                      child:CachedNetworkImage(
+                                          imageUrl:channels[index].pictureUrl,
+                                          fit: BoxFit.fill,
+                                        ), 
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: channels[index].viewed==0?PRIMARY_COLOR:Colors.grey,
+                                        width: SEPARATOR_PADDING/2
+                                      ),
+                                      shape: BoxShape.circle,
+                                      ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Center(
+                                    child: Text(channels[index].name,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold
+                                            ),
+                                        ),
+                                  )
+                                )
+                              ],
+                            )
+                        ),
+                      );
+                      }
+                    )
+                ],
+              )]
+            ,
+          )
+          
       ),
     );
   }
