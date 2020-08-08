@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:videos/c.dart';
 import 'package:videos/database.dart';
-
+import 'package:flutter/foundation.dart';
 import 'home.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseAdMob.instance.initialize(appId: APP_ID);
   Admob.initialize(APP_ID);
-  CatcherOptions debugOptions =CatcherOptions(DialogReportMode(), [ConsoleHandler()]);
+  CatcherOptions debugOptions =CatcherOptions(DialogReportMode(), [EmailManualHandler(["ahmad.rajab@windowslive.com"])]);
   CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
     EmailManualHandler(["ahmad.rajab@windowslive.com"])
   ]);
@@ -22,10 +22,10 @@ void main() async{
 
 class MyApp extends StatelessWidget {
 
-  static var database;
+  static Database database;
 
-  void configureDatabase()async{
-    database = openDatabase(DATABASE_NAME, version: DATABASE_VERSION,
+  static Future configureDatabase()async{
+    database = await openDatabase(DATABASE_NAME, version: DATABASE_VERSION,
     onCreate: (Database db, int version) async {
       await db.execute('create table $WATCHED_VIDEOS ($VIDEO_ID text,$REACHED_SECOND integer default 0,$NOTE text)');
       await db.execute('create table $TABLE_FAVORITE_VIDEOS ($VIDEO_TITLE text,$VIDEO_ID text,$VIDEO_DESCRIPTION text,$VIDEO_THUMBURL text)');
@@ -44,7 +44,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    configureDatabase();
     return DynamicTheme(
       defaultBrightness: Brightness.light,
       data: (brightness) => ThemeData(
@@ -65,7 +64,6 @@ class MyApp extends StatelessWidget {
 
 MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
   gender: MobileAdGender.unknown,
-  designedForFamilies: true,
   childDirected: true
 );
 
@@ -73,7 +71,7 @@ class AdmobAdd extends StatelessWidget{
     @override
   Widget build(BuildContext context) {
     return !PRO?AdmobBanner(
-              adUnitId: BANNER_AD_UNIT_ID,
+              adUnitId: kReleaseMode?BANNER_AD_UNIT_ID:BannerAd.testAdUnitId,
               adSize: AdmobBannerSize.BANNER,
               ):Container();
   }

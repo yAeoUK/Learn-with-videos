@@ -1,4 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import 'c.dart';
 
 class SettingsPage extends StatefulWidget{
   @override
@@ -8,7 +11,10 @@ class SettingsPage extends StatefulWidget{
 class SettingsPageState extends State<SettingsPage>{
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(SETTINGS),
+      ),
+    );
   }
 }

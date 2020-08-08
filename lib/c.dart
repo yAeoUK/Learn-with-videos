@@ -61,6 +61,12 @@ import 'package:url_launcher/url_launcher.dart';
    const PLEASE_TRY_AGAIN_LATER='Please try again later';
    const PRO=true;
    const APP_LINK='https://play.google.com/store/apps/details?id=com.atwebpages.learnspanishenglish.pro';
+   const NO_CONNECTION_PLEASE_TRY_AGAIN_LATER='No internet connection, please try again later';
+   const LOADING='Loading';
+   const CONNECTING_TO_SERVER_PLEASE_WAIT='Connecting to the server, please wait';
+   const PLEASE_RATE_THE_APP='Please rate the ap iif you like it';
+   const ASK_LATER='Ask later';
+   const NEVER='Never';
 
    String doubleDigit(int digit){
     if(digit<10)return '0'+digit.toString();
