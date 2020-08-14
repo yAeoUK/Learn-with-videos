@@ -1,6 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:videos/VideoList.dart';
+import 'package:videos/database.dart';
+import 'package:videos/main.dart';
 
 import 'c.dart';
 
@@ -36,6 +39,24 @@ class VideoListItemState extends State<VideoListItem>{
                       ),
                       shape: BoxShape.rectangle,
                       ),
+        child: ListTile(
+          leading: CachedNetworkImage(
+            imageUrl: video.thumbnailUrl,
+          ),
+          title: Text(video.title),
+          trailing: GestureDetector(
+            child: Icon(Icons.star,
+                      color: (video.favorite?Colors.yellow:Theme.of(context).iconTheme),
+                      ),
+            onTap: (){
+              setState(() {
+                video.favorite=!video.favorite;
+              });
+              if(video.favorite)MyApp.database.rawInsert('insert into $TABLE_FAVORITE_VIDEOS ($VIDEO_ID,$VIDEO_TITLE,$VIDEO_THUMBURL) values (\'${video.videoId}\',\'${video.title}\',\'${video.thumbnailUrl}\')');
+              else MyApp.database.rawDelete('delete from $TABLE_FAVORITE_VIDEOS where $VIDEO_ID =\'${video.videoId}\'');
+            },
+          )
+        ),
       ),
     );
   }
