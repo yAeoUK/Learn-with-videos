@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void showRateAppMessage()async{
     int askLater=0,never=-1,ok=1;
     var reference=await SharedPreferences.getInstance();
-    if(reference.getInt('rateApp')??askLater==askLater){
+    if((reference.getInt('rateApp')??askLater)==askLater){
       int count=reference.getInt('count')??0;
       if(count<5)reference.setInt('count', count+1);
       else {

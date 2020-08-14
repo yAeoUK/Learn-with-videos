@@ -67,6 +67,9 @@ import 'package:url_launcher/url_launcher.dart';
    const PLEASE_RATE_THE_APP='Please rate the ap iif you like it';
    const ASK_LATER='Ask later';
    const NEVER='Never';
+   const THEME='Theme';
+   const LIGHT='Light';
+   const NIGHT='Night';
 
    String doubleDigit(int digit){
     if(digit<10)return '0'+digit.toString();
