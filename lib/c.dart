@@ -70,6 +70,8 @@ import 'package:url_launcher/url_launcher.dart';
    const THEME='Theme';
    const LIGHT='Light';
    const NIGHT='Night';
+   const ADD_NOTE='Add a note';
+   const VIEW_NOTE='View note';
 
    String doubleDigit(int digit){
     if(digit<10)return '0'+digit.toString();

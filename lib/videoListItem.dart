@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:videos/VideoList.dart';
 import 'package:videos/database.dart';
 import 'package:videos/main.dart';
+import 'package:videos/video.dart';
 
 import 'c.dart';
 
@@ -40,6 +41,9 @@ class VideoListItemState extends State<VideoListItem>{
                       shape: BoxShape.rectangle,
                       ),
         child: ListTile(
+          onTap: (){
+            Navigator.push(context,MaterialPageRoute(builder: (context) => VideoPage(video)));
+          },
           leading: CachedNetworkImage(
             imageUrl: video.thumbnailUrl,
           ),

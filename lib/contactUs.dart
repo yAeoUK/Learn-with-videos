@@ -31,7 +31,8 @@ class ContactUsPage extends StatelessWidget{
                     Map data=Map();
                     data['suggestion']=textEditingController.text;
                     String result=await Post(context,'suggestion.pnp',data).fetchPost();
-                    YYDialog()?.dismiss();
+                    ///YYDialog()?.dismiss();
+                    Navigator.pop(context);
                     if(result=='1'){
                       showOKDialogue(THANKS, DATA_RECEIVED_THANKS, context,onOkClicked:() {
                         Navigator.pop(context);

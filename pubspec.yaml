@@ -37,7 +37,10 @@ dependencies:
   share: ^0.6.4+3
   cached_network_image: ^2.2.0+1
   flutter_custom_dialog: ^1.0.20
-
+  youtube_player: ^3.5.0+1
+  youtube_player_flutter: ^7.0.0+7
+  device_info: ^0.4.2+6
+  expandable: ^4.1.4
 
 
 dev_dependencies:
