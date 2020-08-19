@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:videos/c.dart';
@@ -61,26 +62,8 @@ class VideoListPage extends StatefulWidget{
     }
   }
 
-    @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(favorite?FAVORITE_VIDEOS:channel.name),
-      ),
-      body: Column(
-        children: <Widget>[
-          AdmobAdd(),
-          ListView(
-            children: <Widget>[
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: videos.length,
-                itemBuilder: (context, index)=>VideoListItem(context:context,video:videos[index])
-              ),
-              (!favorite)?LoadMore(
-                loading: true,
-                onClick: ()async{
-                  var map=Map();
+  void loadData(BuildContext context)async{
+    var map=Map();
                   map['channelId']=channel.url;
                   map['skip']=videos.length;
                   var dataString=await Post(context,'getVideos.php',map).fetchPost();
@@ -103,7 +86,34 @@ class VideoListPage extends StatefulWidget{
                   setState(() {
                     
                   });
-                },
+  }
+
+    @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(favorite?FAVORITE_VIDEOS:channel.name),
+      ),
+      body: Column(
+        children: <Widget>[
+          AdmobAdd(),
+          ListView(
+            children: <Widget>[
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: videos.length,
+                itemBuilder: (context, index)=>VideoListItem(context:context,video:videos[index])
+              ),
+              (!favorite)?LoadMore(
+                loading: true,
+                onClick: ()async{
+                  if(PRO)loadData(context);
+                  else {
+                  await RewardedVideoAd.instance.load(adUnitId:REWARD_AD_UNIT_ID ,targetingInfo: targetingInfo);
+                  await RewardedVideoAd.instance.show();
+                  loadData(context);
+                }
+                }
               ):Container()
             ],
           )

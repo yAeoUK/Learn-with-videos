@@ -133,7 +133,7 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
             child:ExpandablePanel(
                     controller: expandableController,
                     collapsed: Text(note.isEmpty?ADD_NOTE:VIEW_NOTE),
-                    expanded: TextFormField(
+                    expanded:PRO? TextFormField(
                       focusNode: focusNode,
                       initialValue: note,
                       controller: textEditingController,
@@ -143,6 +143,11 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
                           int v=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $NOTE = \'$note\' where $VIDEO_ID = \'${video.videoId}\'');
                           if(v==0) MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$NOTE) values (\'${video.videoId}\',\'$note\')');
                         });
+                      },
+                    ):RaisedButton(
+                      child: Text(PREMIUM_FEATURE),
+                      onPressed: (){
+                        launchURL(APP_LINK+'.pro');
                       },
                     ),
                   ),

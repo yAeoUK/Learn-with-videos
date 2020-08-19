@@ -24,6 +24,8 @@ import 'package:url_launcher/url_launcher.dart';
    const CLICK_TO_BROWSE_NEW_CHANNELS='Click to browse new channels';
    const APP_ID='ca-app-pub-8041962973846499~6919729392';
    const BANNER_AD_UNIT_ID='ca-app-pub-8041962973846499/9270560565';
+   const REWARD_AD_UNIT_ID='ca-app-pub-8041962973846499/5476410230';
+   const INTERSITIAL_AD_UNIT_ID='ca-app-pub-8041962973846499/2585882389';
    //const BANNER_AD_UNIT_ID='ca-app-pub-3940256099942544/6300978111';
 
   const color=Color.fromRGBO(255, 196, 0, 1.0);
@@ -72,6 +74,7 @@ import 'package:url_launcher/url_launcher.dart';
    const NIGHT='Night';
    const ADD_NOTE='Add a note';
    const VIEW_NOTE='View note';
+   const PREMIUM_FEATURE='This is a premium feature, if you are interested click here';
 
    String doubleDigit(int digit){
     if(digit<10)return '0'+digit.toString();

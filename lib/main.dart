@@ -11,7 +11,7 @@ import 'home.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  await FirebaseAdMob.instance.initialize(appId: APP_ID);
+  FirebaseAdMob.instance.initialize(appId: APP_ID);
   Admob.initialize(APP_ID);
   CatcherOptions debugOptions =CatcherOptions(DialogReportMode(), [EmailManualHandler(["ahmad.rajab@windowslive.com"])]);
   CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
