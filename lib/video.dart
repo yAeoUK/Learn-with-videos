@@ -27,6 +27,9 @@ class VideoPageState extends State<VideoPage> with WidgetsBindingObserver{
   android.VideoPlayerController androidYoutubeController;
   Duration startAt=Duration(seconds: 0);
   String note='';
+  ExpandableController expandableController=ExpandableController();
+  FocusNode focusNode=FocusNode();
+  TextEditingController textEditingController=TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -35,6 +38,15 @@ class VideoPageState extends State<VideoPage> with WidgetsBindingObserver{
     initialiseController();
     checkIfDeviceIsOld();
     getResumePosition();
+    onExpandListener();
+  }
+
+  void onExpandListener(){
+    expandableController.addListener(() {
+      if(expandableController.expanded){
+        focusNode.requestFocus();
+      }
+    });
   }
 
   void initialiseController()async{
@@ -117,10 +129,23 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
           ):
           YoutubePlayer(
             controller: youtubeController,
-          ),
-          ExpandablePanel(
-            collapsed: Text(note.isEmpty?ADD_NOTE:VIEW_NOTE),
-            expanded: Text(),
+          ),Container(
+            child:ExpandablePanel(
+                    controller: expandableController,
+                    collapsed: Text(note.isEmpty?ADD_NOTE:VIEW_NOTE),
+                    expanded: TextFormField(
+                      focusNode: focusNode,
+                      initialValue: note,
+                      controller: textEditingController,
+                      onChanged: (value)async {
+                        note=value;
+                        int v=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $NOTE = \'$note\' where $VIDEO_ID = \'${video.videoId}\'');
+                        if(v==0) MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$NOTE) values (\'${video.videoId}\',\'$note\')');
+                      },
+                    ),
+                  ),
+            padding: EdgeInsets.all(HEADER_PADDING),
+            color: PRIMARY_COLOR,
           )
         ],
       ),
