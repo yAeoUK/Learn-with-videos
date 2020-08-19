@@ -137,10 +137,12 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
                       focusNode: focusNode,
                       initialValue: note,
                       controller: textEditingController,
-                      onChanged: (value)async {
-                        note=value;
-                        int v=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $NOTE = \'$note\' where $VIDEO_ID = \'${video.videoId}\'');
-                        if(v==0) MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$NOTE) values (\'${video.videoId}\',\'$note\')');
+                      onChanged: (value) {
+                        setState(() async{
+                          note=value;
+                          int v=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $NOTE = \'$note\' where $VIDEO_ID = \'${video.videoId}\'');
+                          if(v==0) MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$NOTE) values (\'${video.videoId}\',\'$note\')');
+                        });
                       },
                     ),
                   ),
