@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +7,7 @@ import 'package:videos/c.dart';
 import 'package:videos/database.dart';
 import 'package:videos/main.dart';
 import 'package:videos/post.dart';
+import 'package:videos/videoListItem.dart';
 import 'home_drawer.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -22,13 +22,23 @@ class Channel{
   }
 
 class _MyHomePageState extends State<MyHomePage> {
-
+  
+  Video lastWatchedVideo=Video();
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance
       .addPostFrameCallback((_) => _refreshIndicatorKey.currentState.show());
       showRateAppMessage();
+    showLastWatchedVideo();
+  }
+
+  void showLastWatchedVideo()async{
+    var preferences=await SharedPreferences.getInstance();
+    if(!preferences.containsKey('lastWatchedVideo'))return;
+    setState(() {
+      lastWatchedVideo=Video.fromJson(json.decode(preferences.getString('lastWatchedVideo')));
+    });
   }
 
   void showRateAppMessage()async{
@@ -103,7 +113,10 @@ class _MyHomePageState extends State<MyHomePage> {
     var map=Map();
     map['lastChannelsFitch']=dateTimeSqlString;
 
-    var databaseNetworkData=await Post(context,'fitchNewChannels.php',map).fetchPost();
+    var p=Post(context,'fitchNewChannels.php',map);
+    await p.fetchPost();
+    if(!p.connectionSucceed)return;
+    var databaseNetworkData=p.result;
     List<dynamic> databaseNetworkJson= json.decode(databaseNetworkData);
     for(int c=0;c<databaseNetworkJson.length;c++){
       String channelId=databaseNetworkJson[c]['id'];
@@ -209,6 +222,8 @@ class _MyHomePageState extends State<MyHomePage> {
           )
           
       ),
+      bottomNavigationBar:lastWatchedVideo==Video()?Container(): 
+      VideoListItem(context: context,video: lastWatchedVideo,),
     );
   }
 }

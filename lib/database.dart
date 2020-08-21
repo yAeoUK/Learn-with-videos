@@ -1,3 +1,6 @@
+const String DATABASE_NAME='my_db.db';
+const int DATABASE_VERSION=2;
+
 const WATCHED_VIDEOS='watchedVideos';
 const VIDEO_ID='videoId';
 const REACHED_SECOND='reachedSecond';

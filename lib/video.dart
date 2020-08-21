@@ -1,15 +1,18 @@
 import 'dart:io';
 import 'package:device_info/device_info.dart';
 import 'package:expandable/expandable.dart';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:videos/VideoList.dart';
 import 'package:videos/database.dart';
 import 'package:videos/main.dart';
 import 'package:youtube_player/youtube_player.dart' as android;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-
+import 'dart:convert';
 import 'c.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VideoPage extends StatefulWidget{
 
@@ -39,6 +42,33 @@ class VideoPageState extends State<VideoPage> with WidgetsBindingObserver{
     checkIfDeviceIsOld();
     getResumePosition();
     onExpandListener();
+    showInterstitialWhenPausedOrFinished();
+    saveLastWatchedVideoData();
+  }
+
+  void saveLastWatchedVideoData()async{
+    String encodedVideo =json.encode(video);
+    (await SharedPreferences.getInstance()).setString('lastWatchedVideo',encodedVideo);
+  }
+
+  void showInterstitial()async{
+    InterstitialAd myInterstitial = InterstitialAd(adUnitId: kReleaseMode?INTERSITIAL_AD_UNIT_ID:InterstitialAd.testAdUnitId,targetingInfo: targetingInfo);
+    await myInterstitial.load();
+    await myInterstitial.show();
+  }
+
+  void showInterstitialWhenPausedOrFinished(){
+    if(old)androidYoutubeController.addListener(() {
+      if(!androidYoutubeController.value.isPlaying){
+        showInterstitial();
+        return;
+      }
+    });
+    if(!old)youtubeController.addListener(() {
+      if(youtubeController.value.playerState==PlayerState.paused||youtubeController.value.playerState==PlayerState.ended){
+        showInterstitial();
+      }
+     });
   }
 
   void onExpandListener(){
@@ -134,6 +164,8 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
                     controller: expandableController,
                     collapsed: Text(note.isEmpty?ADD_NOTE:VIEW_NOTE),
                     expanded:PRO? TextFormField(
+                      minLines: 5,
+                      maxLength: 10,
                       focusNode: focusNode,
                       initialValue: note,
                       controller: textEditingController,

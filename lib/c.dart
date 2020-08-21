@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
    const String Last_Channels_Fitch= 'lastChannelsFitch';
    const String NOTIFY_NEW_CHANNEL='notifyNewChannel';
-   const String DATABASE_NAME='my_db.db';
-   const int DATABASE_VERSION=2;
-   Database database;
 
    const ROOT_URL='http://learnspanishenglish.atwebpages.com'+'//';
    const APP_NAME='Learn Spanish';
@@ -27,6 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
    const REWARD_AD_UNIT_ID='ca-app-pub-8041962973846499/5476410230';
    const INTERSITIAL_AD_UNIT_ID='ca-app-pub-8041962973846499/2585882389';
    //const BANNER_AD_UNIT_ID='ca-app-pub-3940256099942544/6300978111';
+   const APP_INFO='App info';
 
   const color=Color.fromRGBO(255, 196, 0, 1.0);
    const PRIMARY_COLOR=MaterialColor(

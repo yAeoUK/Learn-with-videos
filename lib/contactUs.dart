@@ -20,6 +20,7 @@ class ContactUsPage extends StatelessWidget{
                 Padding(
                   padding: EdgeInsets.all(SEPARATOR_PADDING),
                   child: TextFormField(
+                    minLines: 5,
                     autofocus: true,
                     controller: textEditingController,
                   ),
@@ -30,7 +31,10 @@ class ContactUsPage extends StatelessWidget{
                     showLoadingDialogue(context);
                     Map data=Map();
                     data['suggestion']=textEditingController.text;
-                    String result=await Post(context,'suggestion.pnp',data).fetchPost();
+                    Post p=Post(context,'suggestion.pnp',data);
+                    await p.fetchPost();
+                    if(!p.connectionSucceed)return;
+                    String result=p.result;
                     ///YYDialog()?.dismiss();
                     Navigator.pop(context);
                     if(result=='1'){

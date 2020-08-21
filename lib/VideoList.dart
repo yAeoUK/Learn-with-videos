@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:videos/c.dart';
 import 'package:videos/database.dart';
@@ -23,6 +24,18 @@ class VideoListPage extends StatefulWidget{
     final thumbnailUrl,title,videoId;
     var favorite,watched;
     Video({this.videoId,this.title,this.thumbnailUrl,this.favorite,this.watched});
+
+    Map toJson() => {'videoId':videoId,'title':title,'thumbnailUrl':thumbnailUrl,'favorite':favorite,'watched':watched};
+    
+    factory Video.fromJson(var json){
+      return Video(
+        videoId: json['videoId'],
+        title: json['title'],
+        thumbnailUrl: json['thumbnailUrl'],
+        favorite: json['favorite'],
+        watched: json['watched']
+      );
+    }
   }
 
   enum Watched{watched,notWatched,notCompleted}
@@ -66,7 +79,10 @@ class VideoListPage extends StatefulWidget{
     var map=Map();
                   map['channelId']=channel.url;
                   map['skip']=videos.length;
-                  var dataString=await Post(context,'getVideos.php',map).fetchPost();
+                  Post p=Post(context,'getVideos.php',map);
+                  await p.fetchPost();
+                  if(!p.connectionSucceed)return;
+                  var dataString=p.result;
                   var dataJSON= json.decode(dataString);
                   for(var c=0;c<dataJSON.length;c++){
                     var videoJSON=dataJSON[c];
@@ -109,7 +125,7 @@ class VideoListPage extends StatefulWidget{
                 onClick: ()async{
                   if(PRO)loadData(context);
                   else {
-                  await RewardedVideoAd.instance.load(adUnitId:REWARD_AD_UNIT_ID ,targetingInfo: targetingInfo);
+                  await RewardedVideoAd.instance.load(adUnitId:kReleaseMode?REWARD_AD_UNIT_ID:RewardedVideoAd.testAdUnitId ,targetingInfo: targetingInfo);
                   await RewardedVideoAd.instance.show();
                   loadData(context);
                 }

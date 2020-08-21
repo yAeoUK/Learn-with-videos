@@ -2,23 +2,26 @@ import 'package:http/http.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:videos/dialogues.dart';
-
 import 'c.dart';
 
 class Post {
   final String url;
   final Map map;
   final BuildContext context;
+  String result;
+  bool connectionSucceed=false;
   Post(this.context,this.url, this.map);
 
-  Future<String> fetchPost() async{
+  Future fetchPost() async{
   try{
     final response=await post(ROOT_URL+url,body: map);
   if (response.statusCode == 200) {
     ////dynamic jsonData=json.decode(response.body);
-    return response.body;
+    connectionSucceed=true;
+    result= response.body;
   }
   }catch(SocketException){
+    connectionSucceed=false;
     showNoConnectionDialogue(context);
     /*showDialog(context: context,builder: (BuildContext context){
         return AlertDialog(actions: <Widget>[
@@ -39,6 +42,5 @@ class Post {
     
   });
 */}
-return '';
 }
 }

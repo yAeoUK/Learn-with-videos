@@ -71,7 +71,22 @@ class MainDrawer extends StatelessWidget{
             Navigator.pop(context);
             launchURL(DEVELOPERS_APPS);
           },
-        )
+        ),
+        /*ListTile(
+          leading: Icon(
+            Icons.info,
+            color: PRIMARY_COLOR,
+          ),
+          title: Text(APP_INFO),
+          onTap: (){
+            Navigator.pop(context);
+            showAboutDialog(
+              context: context,
+              applicationName: APP_NAME,
+              applicationVersion: PackageInfo
+              );
+          },
+        )*/
       ],
     );
   }
