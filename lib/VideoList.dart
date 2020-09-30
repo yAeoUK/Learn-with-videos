@@ -5,20 +5,26 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:videos/c.dart';
 import 'package:videos/database.dart';
-import 'package:videos/home.dart';
 import 'package:videos/loadMore.dart';
 import 'package:videos/main.dart';
 import 'package:videos/post.dart';
 import 'package:videos/videoListItem.dart';
+import 'package:http/http.dart';
 
-// ignore: must_be_immutable
+
 class VideoListPage extends StatefulWidget{
-  var favorite=false;
-  Channel channel;
-  VideoListPage({this.favorite,this.channel});
+  final bool favorite;
+  final Channel channel;
+  VideoListPage({this.favorite=false,this.channel});
   @override
   State<StatefulWidget> createState()=>VideoListPageState();
   }
+
+  class V extends Object{
+    String publishedAt,channelId,title,description,thumbnailUrl,videoId;
+    V(this.publishedAt,this.channelId,this.title,this.thumbnailUrl,this.videoId,{this.description});
+    Map toJson() => {'publishedAt':publishedAt,'channelId':channelId,'title':title,'description':description,'thumbnailUrl':thumbnailUrl,'videoId':videoId};
+}
 
   class Video{
     final thumbnailUrl,title,videoId;
@@ -54,18 +60,20 @@ class VideoListPage extends StatefulWidget{
 
   void configureFavorite()async{
     if(favorite){
-      var favoriteVideos=await MyApp.database.rawQuery('select * from $TABLE_FAVORITE_VIDEOS');
+      //var favoriteVideos=await MyApp.database.rawQuery('select * from $TABLE_FAVORITE_VIDEOS');
+      List<FavoriteVideo> favoriteVideos=await AppDatabase().getAllFavoriteVideos();
       for(var c=0;c<favoriteVideos.length;c++){
         var favoriteVideo=favoriteVideos[c];
                     var video=Video(
-                        title: favoriteVideo[VIDEO_TITLE],
-                        thumbnailUrl: favoriteVideo[VIDEO_THUMBURL],
-                        videoId: favoriteVideo[VIDEO_ID],
+                        title: favoriteVideo.videoTitle,//[VIDEO_TITLE],
+                        thumbnailUrl: favoriteVideo.videoThumbURL,//[VIDEO_THUMBURL],
+                        videoId: favoriteVideo.videoId,//[VIDEO_ID],
                         favorite: true
                       );
-                    var temp=await MyApp.database.rawQuery('select * from $WATCHED_VIDEOS where $VIDEO_ID = \'${video.videoId}\'');
+                    //var temp=await MyApp.database.rawQuery('select * from $WATCHED_VIDEOS where $VIDEO_ID = \'${video.videoId}\'');
+                    var temp =await AppDatabase().getWatchedVideosById(video.videoId);
                     if(temp.length==0)video.watched=Watched.notWatched;
-                    else if(temp[0][REACHED_SECOND]=='0')video.watched=Watched.watched;
+                    else if(temp[0].reachedSecond==0)video.watched=Watched.watched;
                     else video.watched=Watched.notCompleted;
                     videos.add(video);
       }
@@ -75,15 +83,49 @@ class VideoListPage extends StatefulWidget{
     }
   }
 
-  void loadData(BuildContext context)async{
+  Future<void> fetchVideos(String channelId,{String nextPageToken=''})async{
+    Response response;
+    
+      response= await get('https://www.googleapis.com/youtube/v3/search?channelId=$channelId&part=snippet&key=$YOUTUBEAPIKey&order=date&pageToken=$nextPageToken&maxResults=50');
+    if(response.statusCode==200){
+      dynamic responseJson=json.decode(response.body);
+      nextPageToken=responseJson['nextPageToken'];
+      //int totalResults=responseJson['pageInfo']['totalResults'];
+      List<dynamic> itemsJson=responseJson['items'];
+      List<V> videos= List<V>();
+      for(int c=0;c<itemsJson.length;c++){
+        videos.add(
+        V(itemsJson[c]['snippet']['publishedAt'],
+                        itemsJson[c]['snippet']['channelId'],
+                        itemsJson[c]['snippet']['title'],
+                        itemsJson[c]['snippet']['thumbnails']['default']['url'],
+                        itemsJson[c]['id']['videoId']
+                        ));
+      }
+      var m=Map();
+      m['videos']=videos;
+      String encodedVideos=json.encode(m);
+      Map<String,String> map=Map<String,String>();
+      map['videos']=encodedVideos;
+      response=await post(ROOT_URL+'uploadVideosData.php',body:map);
+  }
+  }
+
+
+  Future loadData(BuildContext context)async{
     var map=Map();
-                  map['channelId']=channel.url;
-                  map['skip']=videos.length;
+                  map['channelId']=channel.link;
+                  map['skip']=videos.length.toString();
                   Post p=Post(context,'getVideos.php',map);
                   await p.fetchPost();
                   if(!p.connectionSucceed)return;
                   var dataString=p.result;
                   var dataJSON= json.decode(dataString);
+                  if(dataJSON['result']=='success'&&dataJSON['message']=='Needs update'){
+                    await fetchVideos(channel.link);
+                    loadData(context);
+                    return;
+                  }
                   for(var c=0;c<dataJSON.length;c++){
                     var videoJSON=dataJSON[c];
                     var video=Video(
@@ -91,11 +133,13 @@ class VideoListPage extends StatefulWidget{
                         thumbnailUrl: videoJSON['thumbnailUrl'],
                         videoId: videoJSON['videoId']
                       );
-                    var temp=await MyApp.database.rawQuery('select * from $TABLE_FAVORITE_VIDEOS where $VIDEO_ID = \'${video.videoId}\'');
+                    //var temp=await MyApp.database.rawQuery('select * from $TABLE_FAVORITE_VIDEOS where $VIDEO_ID = \'${video.videoId}\'');
+                    List<FavoriteVideo> temp=await AppDatabase().getFavoriteVideosById(video.videoId);
                     video.favorite=(temp.length==1);
-                    temp=await MyApp.database.rawQuery('select * from $WATCHED_VIDEOS where $VIDEO_ID = \'${video.videoId}\'');
-                    if(temp.length==0)video.watched=Watched.notWatched;
-                    else if(temp[0][REACHED_SECOND]=='0')video.watched=Watched.watched;
+                    List<WatchedVideo>tem =await AppDatabase().getWatchedVideosById(video.videoId);
+                    //temp=await MyApp.database.rawQuery('select * from $WATCHED_VIDEOS where $VIDEO_ID = \'${video.videoId}\'');
+                    if(tem.length==0)video.watched=Watched.notWatched;
+                    else if(tem[0].reachedSecond==0)video.watched=Watched.watched;
                     else video.watched=Watched.notCompleted;
                     videos.add(video);
                   }
@@ -106,15 +150,48 @@ class VideoListPage extends StatefulWidget{
 
     @override
   Widget build(BuildContext context) {
-    return Scaffold(
+        return Scaffold(
       appBar: AppBar(
         title: Text(favorite?FAVORITE_VIDEOS:channel.name),
       ),
-      body: Column(
+      body: CustomScrollView(
+        slivers: [
+          SliverList(
+            delegate:SliverChildListDelegate(
+              [
+                AdmobAdd()
+              ]
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index)=>VideoListItem(context:context,video:videos[index]),
+              childCount: videos.length
+            )
+          ),
+          SliverList(
+            delegate:SliverChildListDelegate(
+              [
+                (!favorite)?LoadMore(
+                  loading: true,
+                  onClick: ()async{
+                    if(PRO)loadData(context);
+                    else {
+                    await RewardedVideoAd.instance.load(adUnitId:kReleaseMode?REWARD_AD_UNIT_ID:RewardedVideoAd.testAdUnitId ,targetingInfo: targetingInfo);
+                    await RewardedVideoAd.instance.show();
+                    loadData(context);
+                    }
+                  }
+                ):Container()
+              ]
+            ),
+          ),
+        ],
+      ),
+      /*body: ListView(
+        shrinkWrap: true,
         children: <Widget>[
           AdmobAdd(),
-          ListView(
-            children: <Widget>[
               ListView.builder(
                 shrinkWrap: true,
                 itemCount: videos.length,
@@ -133,8 +210,8 @@ class VideoListPage extends StatefulWidget{
               ):Container()
             ],
           )
-        ],
-      ),
-    );
-  }
-}
+  */);
+      }
+    }
+
+  

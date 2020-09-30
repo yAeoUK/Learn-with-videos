@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'c.dart';
 
-void showOKDialogue(String title,String content,BuildContext context,{void onOkClicked()}){
+void showOKDialogue(String title,String content,BuildContext context,{VoidCallback onOkClicked}){
      showDialog(
                         context: context,
                         barrierDismissible: false,
@@ -15,7 +14,7 @@ void showOKDialogue(String title,String content,BuildContext context,{void onOkC
                                 child: Text(OK),
                                 onPressed:(){
                                   Navigator.pop(context);
-                                  onOkClicked();
+                                  if(onOkClicked!=null)onOkClicked();
                                 } ,
                               )
                             ],
@@ -51,7 +50,11 @@ void showOKDialogue(String title,String content,BuildContext context,{void onOkC
                             content: SingleChildScrollView(
                                 child:ListBody(
                                   children: <Widget>[
-                                    CircularProgressIndicator(backgroundColor: PRIMARY_COLOR,),
+                                    Center(
+                                      child: CircularProgressIndicator(
+                                        backgroundColor: PRIMARY_COLOR,
+                                        ),
+                                    ),
                                     Text(CONNECTING_TO_SERVER_PLEASE_WAIT)],
                                     )
                                     )

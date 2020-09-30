@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'package:videos/c.dart';
 import 'package:videos/dialogues.dart';
 import 'package:videos/post.dart';
@@ -21,6 +20,7 @@ class ContactUsPage extends StatelessWidget{
                   padding: EdgeInsets.all(SEPARATOR_PADDING),
                   child: TextFormField(
                     minLines: 5,
+                    maxLines: 10,
                     autofocus: true,
                     controller: textEditingController,
                   ),
@@ -28,15 +28,15 @@ class ContactUsPage extends StatelessWidget{
                 RaisedButton(
                   child: Text(OK),
                   onPressed: () async {
-                    showLoadingDialogue(context);
+                    //showLoadingDialogue(context);
                     Map data=Map();
                     data['suggestion']=textEditingController.text;
-                    Post p=Post(context,'suggestion.pnp',data);
+                    Post p=Post(context,'suggestion.php',data,showDialogue: true);
                     await p.fetchPost();
                     if(!p.connectionSucceed)return;
                     String result=p.result;
                     ///YYDialog()?.dismiss();
-                    Navigator.pop(context);
+                    ///Navigator.pop(context);
                     if(result=='1'){
                       showOKDialogue(THANKS, DATA_RECEIVED_THANKS, context,onOkClicked:() {
                         Navigator.pop(context);

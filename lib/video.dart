@@ -13,6 +13,8 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'dart:convert';
 import 'c.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'post.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 
 class VideoPage extends StatefulWidget{
 
@@ -25,6 +27,7 @@ class VideoPage extends StatefulWidget{
 class VideoPageState extends State<VideoPage> with WidgetsBindingObserver{
 
   Video video;
+  WatchedVideo watchedVideoData;
   var old=false;
   YoutubePlayerController youtubeController;
   android.VideoPlayerController androidYoutubeController;
@@ -33,6 +36,7 @@ class VideoPageState extends State<VideoPage> with WidgetsBindingObserver{
   ExpandableController expandableController=ExpandableController();
   FocusNode focusNode=FocusNode();
   TextEditingController textEditingController=TextEditingController();
+  var description='';
   @override
   void initState() {
     super.initState();
@@ -44,6 +48,20 @@ class VideoPageState extends State<VideoPage> with WidgetsBindingObserver{
     onExpandListener();
     showInterstitialWhenPausedOrFinished();
     saveLastWatchedVideoData();
+    getVideoData();
+  }
+
+  void getVideoData(){
+    var m=Map<String,String>();
+    m['videoId']=video.videoId;
+    var p=Post(context,'getVideoData.php',m);
+    if(!p.connectionSucceed)return;
+    var resultJson=json.decode(p.result);
+    if(resultJson['result']=='succeed'&&resultJson['message']=='Needs update'){
+      
+      getVideoData();
+      return;
+    }
   }
 
   void saveLastWatchedVideoData()async{
@@ -88,11 +106,14 @@ class VideoPageState extends State<VideoPage> with WidgetsBindingObserver{
     if(old&&androidYoutubeController==null)return;
     if((!old)&&youtubeController.value.playerState==PlayerState.unStarted)return;
     if(old&&androidYoutubeController.value.position.inSeconds==0)return;
-    var currentPosition=old?androidYoutubeController.value.position.inSeconds:youtubeController.value.position.inSeconds;
-    if((!old)&&youtubeController.value.playerState==PlayerState.ended)currentPosition=0;
-    if(old&&androidYoutubeController.value.duration.inSeconds==androidYoutubeController.value.position.inSeconds)currentPosition=0;
-    int value=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $REACHED_SECOND = $currentPosition where $VIDEO_ID = \'${video.videoId}\'');
-    if(value==0)await MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$REACHED_SECOND) values (\'${video.videoId}\',$currentPosition)');
+    startAt=old?androidYoutubeController.value.position:youtubeController.value.position;
+    if((!old)&&youtubeController.value.playerState==PlayerState.ended)startAt=Duration();
+    if(old&&androidYoutubeController.value.duration.inSeconds==androidYoutubeController.value.position.inSeconds)startAt=Duration();
+    AppDatabase().addOrUpdateWatchedVideo(
+      WatchedVideo(videoId: video.videoId, note: note, reachedSecond: startAt.inSeconds)
+    );
+    //int value=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $REACHED_SECOND = $currentPosition where $VIDEO_ID = \'${video.videoId}\'');
+    //if(value==0)await MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$REACHED_SECOND) values (\'${video.videoId}\',$currentPosition)');
       
   }
 
@@ -125,8 +146,10 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
     }
   }
 
-  void getResumePosition(){
-    MyApp.database.rawQuery('select * from $WATCHED_VIDEOS where $VIDEO_ID = \'${video.videoId}\'').then(
+  void getResumePosition()async{
+    List<WatchedVideo> watchedVideos=await AppDatabase().getWatchedVideosById(video.videoId);
+    if(watchedVideos.isNotEmpty)watchedVideoData=watchedVideos[0];
+    /*MyApp.database.rawQuery('select * from $WATCHED_VIDEOS where $VIDEO_ID = \'${video.videoId}\'').then(
       (value){
         if(value.length>0){
          setState(() {
@@ -137,7 +160,7 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
           });
         }
       }
-      );
+      );*/
   }
 
   @override
@@ -172,8 +195,9 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
                       onChanged: (value) {
                         setState(() async{
                           note=value;
-                          int v=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $NOTE = \'$note\' where $VIDEO_ID = \'${video.videoId}\'');
-                          if(v==0) MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$NOTE) values (\'${video.videoId}\',\'$note\')');
+                          saveCurrentPosition();
+                          //int v=await MyApp.database.rawUpdate('update $WATCHED_VIDEOS  set $NOTE = \'$note\' where $VIDEO_ID = \'${video.videoId}\'');
+                          //if(v==0) MyApp.database.rawInsert('insert into $WATCHED_VIDEOS ($VIDEO_ID,$NOTE) values (\'${video.videoId}\',\'$note\')');
                         });
                       },
                     ):RaisedButton(
@@ -185,6 +209,10 @@ void didChangeAppLifecycleState(AppLifecycleState state)async {
                   ),
             padding: EdgeInsets.all(HEADER_PADDING),
             color: PRIMARY_COLOR,
+          ),
+          Linkify(
+            text:description,
+            onOpen:(url)=>launchURL(url.url)
           )
         ],
       ),

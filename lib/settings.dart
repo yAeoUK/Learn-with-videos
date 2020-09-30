@@ -17,9 +17,9 @@ class SettingsPageState extends State<SettingsPage>{
         title: Text(SETTINGS),
       ),
       body: ListView(
+        shrinkWrap: true,
         children: <Widget>[
           Container(
-            height: 50,
             child: ListTile(
               leading: Icon(Icons.wb_sunny),
               title: Text(THEME),
@@ -27,7 +27,7 @@ class SettingsPageState extends State<SettingsPage>{
           ),
           DropdownButton(
             value: Theme.of(context).brightness==Brightness.light?LIGHT:NIGHT,
-            underline: Container(
+            underline: Divider(
               height: 2,
               color: PRIMARY_COLOR,
             ),

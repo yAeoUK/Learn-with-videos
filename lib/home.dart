@@ -7,7 +7,6 @@ import 'package:videos/c.dart';
 import 'package:videos/database.dart';
 import 'package:videos/main.dart';
 import 'package:videos/post.dart';
-import 'package:videos/videoListItem.dart';
 import 'home_drawer.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -15,15 +14,10 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class Channel{
-    final String name,pictureUrl,url;
-    final int viewed;
-    Channel({this.name,this.pictureUrl,this.url,this.viewed});
-  }
-
 class _MyHomePageState extends State<MyHomePage> {
   
-  Video lastWatchedVideo=Video();
+  Video lastWatchedVideo;
+  var lastWatchedVideoExists=false;
   @override
   void initState() {
     super.initState();
@@ -38,6 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if(!preferences.containsKey('lastWatchedVideo'))return;
     setState(() {
       lastWatchedVideo=Video.fromJson(json.decode(preferences.getString('lastWatchedVideo')));
+      lastWatchedVideoExists=true;
     });
   }
 
@@ -93,7 +88,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> getChannelsData() async {
     await MyApp.configureDatabase();
     channels.clear();
-    var databaseData=await MyApp.database.rawQuery('select * from $CHANNELS');
+    AppDatabase database=AppDatabase();
+    List<Channel> c=await database.getAllChannels();
+    channels.addAll(c);
+    /*var databaseData=await MyApp.database.rawQuery('select * from $CHANNELS');
     for(int c=0;c<databaseData.length;c++){
       channels.add(
         Channel(
@@ -103,8 +101,10 @@ class _MyHomePageState extends State<MyHomePage> {
           viewed: databaseData[c][VIEWED]
         )
       );
-    }
-    if(databaseData.length>0)setState(() {});
+    }*/
+    if(channels.length>0)setState(() {
+      channels=channels;
+    });
 
     var preferences=await SharedPreferences.getInstance();
     var last=preferences.getInt('lastChannelsFitch')??0;
@@ -119,35 +119,50 @@ class _MyHomePageState extends State<MyHomePage> {
     var databaseNetworkData=p.result;
     List<dynamic> databaseNetworkJson= json.decode(databaseNetworkData);
     for(int c=0;c<databaseNetworkJson.length;c++){
-      String channelId=databaseNetworkJson[c]['id'];
-      var v=await MyApp.database.rawQuery('select * from $CHANNELS where id = $channelId');
+      int channelId= int.parse(databaseNetworkJson[c]['id']);
+      //var v=await MyApp.database.rawQuery('select * from $CHANNELS where id = $channelId');
+      var v=await database.getChannelsById(channelId);
       if(v.length==0){
         Channel channel=Channel(
             name:databaseNetworkJson[c]['name'],
-            pictureUrl:databaseNetworkJson[c]['pictureLink'],
-            url:databaseNetworkJson[c]['link'],
-            viewed: 0
+            pictureLink:databaseNetworkJson[c]['pictureLink'],
+            link:databaseNetworkJson[c]['link'],
+            type:databaseNetworkJson[c]['type'],
+            viewed: 0,
+            getNotifications: 1,
+            id: channelId
           );
         channels.add(channel);
-        await MyApp.database.rawInsert('insert into $CHANNELS ($NAME,$LINK,$PICTURE_LINK,$ID) values (\'${channel.name}\' , \'${channel.url}\', \'${channel.pictureUrl}\',$channelId )');
+        //await MyApp.database.rawInsert('insert into $CHANNELS ($NAME,$LINK,$PICTURE_LINK,$ID) values (\'${channel.name}\' , \'${channel.url}\', \'${channel.pictureUrl}\',$channelId )');
+        await database.insertNewChannel(channel);
       }
       else {
-        Channel channel=Channel(
+        /*Channel channel=Channel(
             name:databaseNetworkJson[c]['name'],
             pictureUrl:databaseNetworkJson[c]['pictureLink'],
             url:databaseNetworkJson[c]['link'],
+          );*/
+          // ignore: missing_required_param
+          Channel channel=Channel(
+            name:databaseNetworkJson[c]['name'],
+            pictureLink:databaseNetworkJson[c]['pictureLink'],
+            link:databaseNetworkJson[c]['link'],
+            type:databaseNetworkJson[c]['type'],
+            id: channelId
           );
-          for(int c=0;c<channels.length;c++)if(channels[c].url==channel.url){
+          /*for(int c=0;c<channels.length;c++)if(channels[c].link==channel.link){
               channels[c]=channel;
               break;
-          }
-          await MyApp.database.rawUpdate('update $CHANNELS set $NAME = \'${channel.name}\' , $LINK = \'${channel.url}\', $PICTURE_LINK = \'${channel.pictureUrl}\' where $ID = $channelId');
+          }*/
+          //await MyApp.database.rawUpdate('update $CHANNELS set $NAME = \'${channel.name}\' , $LINK = \'${channel.url}\', $PICTURE_LINK = \'${channel.pictureUrl}\' where $ID = $channelId');
+          await database.updateChannel(channel);
       }
 
     }
-
-    setState(() {});
     preferences.setInt('lastChannelsFitch', DateTime.now().toUtc().millisecondsSinceEpoch);
+    setState(() {
+      channels=channels;
+    });
   }
   
   @override
@@ -159,13 +174,13 @@ class _MyHomePageState extends State<MyHomePage> {
       drawer: Drawer(
         child: MainDrawer(),
       ),
-      body: RefreshIndicator(
-            onRefresh: getChannelsData,
-            key: _refreshIndicatorKey,
-            child: Column(
+      body: Column(
         children: <Widget>[
           AdmobAdd(),
-          ListView(
+          RefreshIndicator(
+            onRefresh: getChannelsData,
+            key: _refreshIndicatorKey,
+            child:ListView(
               shrinkWrap: true,
                 children: <Widget>[
                   GridView.builder(
@@ -183,10 +198,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                 Expanded(
                                   flex: 3,
                                   child: Container(
-                                    padding: EdgeInsets.all(SEPARATOR_PADDING/2),
+                                    padding: EdgeInsets.all(SEPARATOR_PADDING/2.0),
                                     child: ClipOval(
                                       child:CachedNetworkImage(
-                                          imageUrl:channels[index].pictureUrl,
+                                          imageUrl:channels[index].pictureLink,
                                           fit: BoxFit.fill,
                                         ), 
                                     ),
@@ -217,13 +232,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                     )
                 ],
-              )]
+              )
             ,
-          )
-          
+        )
+        ] 
       ),
-      bottomNavigationBar:lastWatchedVideo==Video()?Container(): 
-      VideoListItem(context: context,video: lastWatchedVideo,),
+      /*bottomNavigationBar:(!lastWatchedVideoExists)?Container(): 
+      VideoListItem(context: context,video: lastWatchedVideo,),*/
     );
   }
 }

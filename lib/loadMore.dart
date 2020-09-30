@@ -19,7 +19,7 @@ class LoadMoreState extends State<LoadMore>{
     super.initState();
     loading=widget.loading;
     onClick=widget.onClick;
-    configureLoading();
+    //configureLoading();
   }
 
   void configureLoading()async{
@@ -36,7 +36,8 @@ class LoadMoreState extends State<LoadMore>{
 
   @override
   Widget build(BuildContext context) {
-    return loading?CircularProgressIndicator(
+    return CircularProgressIndicator();
+    /*return loading?CircularProgressIndicator(
       backgroundColor: PRIMARY_COLOR,
     ):
     RaisedButton(
@@ -46,6 +47,6 @@ class LoadMoreState extends State<LoadMore>{
        },
       child: Text(LOADING),
       color: PRIMARY_COLOR,
-    );
+    );*/
   }
 }

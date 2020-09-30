@@ -10,19 +10,29 @@ class Post {
   final BuildContext context;
   String result;
   bool connectionSucceed=false;
-  Post(this.context,this.url, this.map);
+  bool showDialogue;
+  Post(this.context,this.url, this.map,{this.showDialogue=false});
 
   Future fetchPost() async{
   try{
-    final response=await post(ROOT_URL+url,body: map);
+    if(showDialogue)showLoadingDialogue(context);
+    
+    final response=await post(ROOT_URL+url,body: map,headers: {
+  "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+  "Access-Control-Allow-Credentials": "true", // Required for cookies, authorization headers with HTTPS
+  "Access-Control-Allow-Headers": "Origin,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+},);
+    if(showDialogue)Navigator.pop(context);
   if (response.statusCode == 200) {
     ////dynamic jsonData=json.decode(response.body);
     connectionSucceed=true;
     result= response.body;
   }
-  }catch(SocketException){
+  }catch(e){
+    if(showDialogue)Navigator.pop(context);
     connectionSucceed=false;
-    showNoConnectionDialogue(context);
+    showOKDialogue('title', e.toString(), context);
     /*showDialog(context: context,builder: (BuildContext context){
         return AlertDialog(actions: <Widget>[
           FlatButton(

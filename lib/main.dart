@@ -5,7 +5,6 @@ import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:videos/c.dart';
-import 'package:videos/database.dart';
 import 'package:flutter/foundation.dart';
 import 'home.dart';
 
@@ -13,9 +12,9 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   FirebaseAdMob.instance.initialize(appId: APP_ID);
   Admob.initialize(APP_ID);
-  CatcherOptions debugOptions =CatcherOptions(DialogReportMode(), [EmailManualHandler(["ahmad.rajab@windowslive.com"])]);
+  CatcherOptions debugOptions =CatcherOptions(DialogReportMode(), [kIsWeb?ConsoleHandler(): EmailManualHandler(["ahmad.rajab@windowslive.com"])]);
   CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
-    EmailManualHandler(["ahmad.rajab@windowslive.com"])
+    kIsWeb?ToastHandler():EmailManualHandler(["ahmad.rajab@windowslive.com"])
   ]);
   Catcher(MyApp(), debugConfig: debugOptions, releaseConfig: releaseOptions);
 }
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
   static Database database;
 
   static Future configureDatabase()async{
-    database = await openDatabase(DATABASE_NAME, version: DATABASE_VERSION,
+    /*database = await openDatabase(DATABASE_NAME, version: DATABASE_VERSION,
     onCreate: (Database db, int version) async {
       await db.execute('create table $WATCHED_VIDEOS ($VIDEO_ID text,$REACHED_SECOND integer default 0,$NOTE text)');
       await db.execute('create table $TABLE_FAVORITE_VIDEOS ($VIDEO_TITLE text,$VIDEO_ID text,$VIDEO_DESCRIPTION text,$VIDEO_THUMBURL text)');
@@ -39,7 +38,7 @@ class MyApp extends StatelessWidget {
        }
        if(!noteColumnExists) await db.execute('alter table $WATCHED_VIDEOS add $NOTE text');
      },);
-
+    */
   }
 
   @override
@@ -63,6 +62,7 @@ class MyApp extends StatelessWidget {
 }
 
 MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
+  // ignore: deprecated_member_use
   gender: MobileAdGender.unknown,
   childDirected: true
 );
