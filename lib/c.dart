@@ -73,6 +73,12 @@ import 'package:url_launcher/url_launcher.dart';
    const VIEW_NOTE='View note';
    const PREMIUM_FEATURE='This is a premium feature, if you are interested click here';
 
+   const TIME_TO_LEARN='Time to Learn Spanish';
+   const TIME_TO_LEARN_DESCRIPTION='Click here to open the app and learn Spanish';
+
+   const DAILY_REMINDER_NOTIFICATION_ID=0;
+   const DAILY_NEW_VIDEOS_FETCH_ALARAM_ID=1;
+
    String doubleDigit(int digit){
     if(digit<10)return '0'+digit.toString();
     return digit.toString();

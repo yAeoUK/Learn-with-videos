@@ -425,12 +425,18 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
 
 class WatchedVideo extends DataClass implements Insertable<WatchedVideo> {
   final String videoId;
+  final int id;
   final String note;
   final int reachedSecond;
+  final String videoThumbURL;
+  final String videoTitle;
   WatchedVideo(
       {@required this.videoId,
+      @required this.id,
       @required this.note,
-      @required this.reachedSecond});
+      @required this.reachedSecond,
+      @required this.videoThumbURL,
+      @required this.videoTitle});
   factory WatchedVideo.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
@@ -439,9 +445,14 @@ class WatchedVideo extends DataClass implements Insertable<WatchedVideo> {
     return WatchedVideo(
       videoId: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}video_id']),
+      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       note: stringType.mapFromDatabaseResponse(data['${effectivePrefix}note']),
       reachedSecond: intType
           .mapFromDatabaseResponse(data['${effectivePrefix}reached_second']),
+      videoThumbURL: stringType
+          .mapFromDatabaseResponse(data['${effectivePrefix}video_thumb_u_r_l']),
+      videoTitle: stringType
+          .mapFromDatabaseResponse(data['${effectivePrefix}video_title']),
     );
   }
   @override
@@ -450,11 +461,20 @@ class WatchedVideo extends DataClass implements Insertable<WatchedVideo> {
     if (!nullToAbsent || videoId != null) {
       map['video_id'] = Variable<String>(videoId);
     }
+    if (!nullToAbsent || id != null) {
+      map['id'] = Variable<int>(id);
+    }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
     if (!nullToAbsent || reachedSecond != null) {
       map['reached_second'] = Variable<int>(reachedSecond);
+    }
+    if (!nullToAbsent || videoThumbURL != null) {
+      map['video_thumb_u_r_l'] = Variable<String>(videoThumbURL);
+    }
+    if (!nullToAbsent || videoTitle != null) {
+      map['video_title'] = Variable<String>(videoTitle);
     }
     return map;
   }
@@ -464,10 +484,17 @@ class WatchedVideo extends DataClass implements Insertable<WatchedVideo> {
       videoId: videoId == null && nullToAbsent
           ? const Value.absent()
           : Value(videoId),
+      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       reachedSecond: reachedSecond == null && nullToAbsent
           ? const Value.absent()
           : Value(reachedSecond),
+      videoThumbURL: videoThumbURL == null && nullToAbsent
+          ? const Value.absent()
+          : Value(videoThumbURL),
+      videoTitle: videoTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(videoTitle),
     );
   }
 
@@ -476,8 +503,11 @@ class WatchedVideo extends DataClass implements Insertable<WatchedVideo> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return WatchedVideo(
       videoId: serializer.fromJson<String>(json['videoId']),
+      id: serializer.fromJson<int>(json['id']),
       note: serializer.fromJson<String>(json['note']),
       reachedSecond: serializer.fromJson<int>(json['reachedSecond']),
+      videoThumbURL: serializer.fromJson<String>(json['videoThumbURL']),
+      videoTitle: serializer.fromJson<String>(json['videoTitle']),
     );
   }
   @override
@@ -485,71 +515,120 @@ class WatchedVideo extends DataClass implements Insertable<WatchedVideo> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'videoId': serializer.toJson<String>(videoId),
+      'id': serializer.toJson<int>(id),
       'note': serializer.toJson<String>(note),
       'reachedSecond': serializer.toJson<int>(reachedSecond),
+      'videoThumbURL': serializer.toJson<String>(videoThumbURL),
+      'videoTitle': serializer.toJson<String>(videoTitle),
     };
   }
 
-  WatchedVideo copyWith({String videoId, String note, int reachedSecond}) =>
+  WatchedVideo copyWith(
+          {String videoId,
+          int id,
+          String note,
+          int reachedSecond,
+          String videoThumbURL,
+          String videoTitle}) =>
       WatchedVideo(
         videoId: videoId ?? this.videoId,
+        id: id ?? this.id,
         note: note ?? this.note,
         reachedSecond: reachedSecond ?? this.reachedSecond,
+        videoThumbURL: videoThumbURL ?? this.videoThumbURL,
+        videoTitle: videoTitle ?? this.videoTitle,
       );
   @override
   String toString() {
     return (StringBuffer('WatchedVideo(')
           ..write('videoId: $videoId, ')
+          ..write('id: $id, ')
           ..write('note: $note, ')
-          ..write('reachedSecond: $reachedSecond')
+          ..write('reachedSecond: $reachedSecond, ')
+          ..write('videoThumbURL: $videoThumbURL, ')
+          ..write('videoTitle: $videoTitle')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => $mrjf(
-      $mrjc(videoId.hashCode, $mrjc(note.hashCode, reachedSecond.hashCode)));
+  int get hashCode => $mrjf($mrjc(
+      videoId.hashCode,
+      $mrjc(
+          id.hashCode,
+          $mrjc(
+              note.hashCode,
+              $mrjc(reachedSecond.hashCode,
+                  $mrjc(videoThumbURL.hashCode, videoTitle.hashCode))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
       (other is WatchedVideo &&
           other.videoId == this.videoId &&
+          other.id == this.id &&
           other.note == this.note &&
-          other.reachedSecond == this.reachedSecond);
+          other.reachedSecond == this.reachedSecond &&
+          other.videoThumbURL == this.videoThumbURL &&
+          other.videoTitle == this.videoTitle);
 }
 
 class WatchedVideosCompanion extends UpdateCompanion<WatchedVideo> {
   final Value<String> videoId;
+  final Value<int> id;
   final Value<String> note;
   final Value<int> reachedSecond;
+  final Value<String> videoThumbURL;
+  final Value<String> videoTitle;
   const WatchedVideosCompanion({
     this.videoId = const Value.absent(),
+    this.id = const Value.absent(),
     this.note = const Value.absent(),
     this.reachedSecond = const Value.absent(),
+    this.videoThumbURL = const Value.absent(),
+    this.videoTitle = const Value.absent(),
   });
   WatchedVideosCompanion.insert({
     @required String videoId,
+    this.id = const Value.absent(),
     this.note = const Value.absent(),
     this.reachedSecond = const Value.absent(),
-  }) : videoId = Value(videoId);
+    @required String videoThumbURL,
+    @required String videoTitle,
+  })  : videoId = Value(videoId),
+        videoThumbURL = Value(videoThumbURL),
+        videoTitle = Value(videoTitle);
   static Insertable<WatchedVideo> custom({
     Expression<String> videoId,
+    Expression<int> id,
     Expression<String> note,
     Expression<int> reachedSecond,
+    Expression<String> videoThumbURL,
+    Expression<String> videoTitle,
   }) {
     return RawValuesInsertable({
       if (videoId != null) 'video_id': videoId,
+      if (id != null) 'id': id,
       if (note != null) 'note': note,
       if (reachedSecond != null) 'reached_second': reachedSecond,
+      if (videoThumbURL != null) 'video_thumb_u_r_l': videoThumbURL,
+      if (videoTitle != null) 'video_title': videoTitle,
     });
   }
 
   WatchedVideosCompanion copyWith(
-      {Value<String> videoId, Value<String> note, Value<int> reachedSecond}) {
+      {Value<String> videoId,
+      Value<int> id,
+      Value<String> note,
+      Value<int> reachedSecond,
+      Value<String> videoThumbURL,
+      Value<String> videoTitle}) {
     return WatchedVideosCompanion(
       videoId: videoId ?? this.videoId,
+      id: id ?? this.id,
       note: note ?? this.note,
       reachedSecond: reachedSecond ?? this.reachedSecond,
+      videoThumbURL: videoThumbURL ?? this.videoThumbURL,
+      videoTitle: videoTitle ?? this.videoTitle,
     );
   }
 
@@ -559,11 +638,20 @@ class WatchedVideosCompanion extends UpdateCompanion<WatchedVideo> {
     if (videoId.present) {
       map['video_id'] = Variable<String>(videoId.value);
     }
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
     if (reachedSecond.present) {
       map['reached_second'] = Variable<int>(reachedSecond.value);
+    }
+    if (videoThumbURL.present) {
+      map['video_thumb_u_r_l'] = Variable<String>(videoThumbURL.value);
+    }
+    if (videoTitle.present) {
+      map['video_title'] = Variable<String>(videoTitle.value);
     }
     return map;
   }
@@ -572,8 +660,11 @@ class WatchedVideosCompanion extends UpdateCompanion<WatchedVideo> {
   String toString() {
     return (StringBuffer('WatchedVideosCompanion(')
           ..write('videoId: $videoId, ')
+          ..write('id: $id, ')
           ..write('note: $note, ')
-          ..write('reachedSecond: $reachedSecond')
+          ..write('reachedSecond: $reachedSecond, ')
+          ..write('videoThumbURL: $videoThumbURL, ')
+          ..write('videoTitle: $videoTitle')
           ..write(')'))
         .toString();
   }
@@ -596,6 +687,15 @@ class $WatchedVideosTable extends WatchedVideos
     );
   }
 
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  GeneratedIntColumn _id;
+  @override
+  GeneratedIntColumn get id => _id ??= _constructId();
+  GeneratedIntColumn _constructId() {
+    return GeneratedIntColumn('id', $tableName, false,
+        hasAutoIncrement: true, declaredAsPrimaryKey: true);
+  }
+
   final VerificationMeta _noteMeta = const VerificationMeta('note');
   GeneratedTextColumn _note;
   @override
@@ -616,8 +716,35 @@ class $WatchedVideosTable extends WatchedVideos
         defaultValue: Constant(0));
   }
 
+  final VerificationMeta _videoThumbURLMeta =
+      const VerificationMeta('videoThumbURL');
+  GeneratedTextColumn _videoThumbURL;
   @override
-  List<GeneratedColumn> get $columns => [videoId, note, reachedSecond];
+  GeneratedTextColumn get videoThumbURL =>
+      _videoThumbURL ??= _constructVideoThumbURL();
+  GeneratedTextColumn _constructVideoThumbURL() {
+    return GeneratedTextColumn(
+      'video_thumb_u_r_l',
+      $tableName,
+      false,
+    );
+  }
+
+  final VerificationMeta _videoTitleMeta = const VerificationMeta('videoTitle');
+  GeneratedTextColumn _videoTitle;
+  @override
+  GeneratedTextColumn get videoTitle => _videoTitle ??= _constructVideoTitle();
+  GeneratedTextColumn _constructVideoTitle() {
+    return GeneratedTextColumn(
+      'video_title',
+      $tableName,
+      false,
+    );
+  }
+
+  @override
+  List<GeneratedColumn> get $columns =>
+      [videoId, id, note, reachedSecond, videoThumbURL, videoTitle];
   @override
   $WatchedVideosTable get asDslTable => this;
   @override
@@ -635,6 +762,9 @@ class $WatchedVideosTable extends WatchedVideos
     } else if (isInserting) {
       context.missing(_videoIdMeta);
     }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));
+    }
     if (data.containsKey('note')) {
       context.handle(
           _noteMeta, note.isAcceptableOrUnknown(data['note'], _noteMeta));
@@ -645,11 +775,27 @@ class $WatchedVideosTable extends WatchedVideos
           reachedSecond.isAcceptableOrUnknown(
               data['reached_second'], _reachedSecondMeta));
     }
+    if (data.containsKey('video_thumb_u_r_l')) {
+      context.handle(
+          _videoThumbURLMeta,
+          videoThumbURL.isAcceptableOrUnknown(
+              data['video_thumb_u_r_l'], _videoThumbURLMeta));
+    } else if (isInserting) {
+      context.missing(_videoThumbURLMeta);
+    }
+    if (data.containsKey('video_title')) {
+      context.handle(
+          _videoTitleMeta,
+          videoTitle.isAcceptableOrUnknown(
+              data['video_title'], _videoTitleMeta));
+    } else if (isInserting) {
+      context.missing(_videoTitleMeta);
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {videoId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   WatchedVideo map(Map<String, dynamic> data, {String tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
@@ -921,8 +1067,8 @@ class $FavoriteVideosTable extends FavoriteVideos
   }
 }
 
-abstract class _$AppDatabase extends GeneratedDatabase {
-  _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
+abstract class _$Database extends GeneratedDatabase {
+  _$Database(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   $ChannelsTable _channels;
   $ChannelsTable get channels => _channels ??= $ChannelsTable(this);
   $WatchedVideosTable _watchedVideos;

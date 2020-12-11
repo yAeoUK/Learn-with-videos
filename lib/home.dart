@@ -1,10 +1,12 @@
 import 'dart:convert';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:moor_flutter/moor_flutter.dart' as database;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:videos/VideoList.dart';
+import 'package:videos/advertiser.dart';
 import 'package:videos/c.dart';
-import 'package:videos/database.dart';
+import 'package:videos/database/database.dart';
 import 'package:videos/main.dart';
 import 'package:videos/post.dart';
 import 'home_drawer.dart';
@@ -16,24 +18,21 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   
-  Video lastWatchedVideo;
-  var lastWatchedVideoExists=false;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance
       .addPostFrameCallback((_) => _refreshIndicatorKey.currentState.show());
       showRateAppMessage();
-    showLastWatchedVideo();
   }
 
-  void showLastWatchedVideo()async{
-    var preferences=await SharedPreferences.getInstance();
-    if(!preferences.containsKey('lastWatchedVideo'))return;
-    setState(() {
-      lastWatchedVideo=Video.fromJson(json.decode(preferences.getString('lastWatchedVideo')));
-      lastWatchedVideoExists=true;
-    });
+  Stream getLastWatchedVideo(){
+    Database d=RepositoryProvider.of<Database>(context);
+    return (d.select(d.watchedVideos)
+      ..where((tbl) => tbl.reachedSecond.isNotIn([0]))     
+      ..orderBy([(t) => database.OrderingTerm(expression: t.id,mode: database.OrderingMode.desc)])
+      ..limit(1)
+      ).watch();
   }
 
   void showRateAppMessage()async{
@@ -86,9 +85,9 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Channel> channels=List<Channel>();
 
   Future<void> getChannelsData() async {
-    await MyApp.configureDatabase();
+    await MyAppState.configureDatabase();
     channels.clear();
-    AppDatabase database=AppDatabase();
+    Database database=RepositoryProvider.of<Database>(context);
     List<Channel> c=await database.getAllChannels();
     channels.addAll(c);
     /*var databaseData=await MyApp.database.rawQuery('select * from $CHANNELS');
@@ -164,81 +163,67 @@ class _MyHomePageState extends State<MyHomePage> {
       channels=channels;
     });
   }
+
+  Video lastWatchedVideo;
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(APP_NAME),
-      ),
-      drawer: Drawer(
-        child: MainDrawer(),
-      ),
-      body: Column(
-        children: <Widget>[
-          AdmobAdd(),
-          RefreshIndicator(
-            onRefresh: getChannelsData,
-            key: _refreshIndicatorKey,
-            child:ListView(
-              shrinkWrap: true,
-                children: <Widget>[
-                  GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-                    itemCount: channels.length,
-                    itemBuilder:(context,index){
-                      return GestureDetector(
-                        onTap: (){
-                          Navigator.push(context,MaterialPageRoute(builder: (context) => VideoListPage(channel:channels[index] ,)));
-                        },
-                        child: Card(
-                          child: Column(
-                            children: <Widget>[
-                                Expanded(
-                                  flex: 3,
-                                  child: Container(
-                                    padding: EdgeInsets.all(SEPARATOR_PADDING/2.0),
-                                    child: ClipOval(
-                                      child:CachedNetworkImage(
-                                          imageUrl:channels[index].pictureLink,
-                                          fit: BoxFit.fill,
-                                        ), 
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: channels[index].viewed==0?PRIMARY_COLOR:Colors.grey,
-                                        width: SEPARATOR_PADDING/2
-                                      ),
-                                      shape: BoxShape.circle,
-                                      ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Center(
-                                    child: Text(channels[index].name,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold
-                                            ),
-                                        ),
-                                  )
-                                )
-                              ],
-                            )
-                        ),
-                      );
-                      }
-                    )
-                ],
-              )
-            ,
-        )
-        ] 
-      ),
-      /*bottomNavigationBar:(!lastWatchedVideoExists)?Container(): 
-      VideoListItem(context: context,video: lastWatchedVideo,),*/
-    );
-  }
+    /*return StreamBuilder(
+      stream: getLastWatchedVideo(),
+      builder:(cont,snapshot){
+        Database d=RepositoryProvider.of<Database>(cont);
+        List<WatchedVideo> videos=snapshot.data;
+        if(videos.length>0){
+          lastWatchedVideo=Video(
+          videoId: videos[0].videoId,
+          title: videos[0].videoTitle,
+          thumbnailUrl: videos[0].videoThumbURL,
+          watched: Watched.notCompleted,
+          favorite: false
+        );
+        d.select(d.favoriteVideos)..where((tbl) => tbl.videoId.equals(lastWatchedVideo.videoId))..get().then((value) {
+          List<FavoriteVideo> favorites=value;
+          setState(() {
+            lastWatchedVideo.favorite=favorites.length>0;
+          });
+        });
+        }*/
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(APP_NAME),
+          ),
+          drawer: Drawer(
+            child: MainDrawer(),
+          ),
+          body: Column(
+            children: <Widget>[
+              AdmobAdd(),
+              RefreshIndicator(
+                onRefresh: getChannelsData,
+                key: _refreshIndicatorKey,
+                child:ListView(
+                  shrinkWrap: true,
+                    children: <Widget>[
+                      GridView.builder(
+                        shrinkWrap: true,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                        itemCount: channels.length,
+                        itemBuilder:(context,index){
+                          return Advertiser(channel: channels[index],);
+                          }
+                        )
+                    ],
+                  )
+                ,
+            )
+            ] 
+          ),
+          /*bottomNavigationBar:(snapshot.connectionState!=ConnectionState.done||snapshot.data.length==0)?Container():
+            BottomAppBar(
+              child: VideoListItem(context: cont,video: lastWatchedVideo)
+            )*/
+        );
+      }
+    //);
+  //}
 }

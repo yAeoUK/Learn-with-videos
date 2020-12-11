@@ -16,36 +16,42 @@ class SettingsPageState extends State<SettingsPage>{
       appBar: AppBar(
         title: Text(SETTINGS),
       ),
-      body: ListView(
-        shrinkWrap: true,
-        children: <Widget>[
-          Container(
-            child: ListTile(
-              leading: Icon(Icons.wb_sunny),
-              title: Text(THEME),
-            ),
-          ),
-          DropdownButton(
-            value: Theme.of(context).brightness==Brightness.light?LIGHT:NIGHT,
-            underline: Divider(
-              height: 2,
-              color: PRIMARY_COLOR,
-            ),
-            onChanged: (String newValue){
-              DynamicTheme.of(context).setBrightness(newValue==LIGHT?Brightness.light:Brightness.dark);
-            }, 
-            items: <String>[LIGHT,NIGHT]
-            .map<DropdownMenuItem<String>>((String value){
-              return DropdownMenuItem<String>(
-                value: value,
-                child: ListTile(
-                  title: Text(value),
+      body:SingleChildScrollView(
+        child: Column(
+          //shrinkWrap: true,
+          children: <Widget>[
+            ListTile(
+                leading:Container(
+                  child:Icon(Icons.wb_sunny),
+                  width: 25,
+                  height: 25,
                 ),
-              );
-            }).toList()
-          )
-        ],
-      ),
+                title: Text(THEME),
+              ),
+            DropdownButton(
+              value: Theme.of(context).brightness==Brightness.light?LIGHT:NIGHT,
+              underline: Divider(
+                height: 2,
+                color: PRIMARY_COLOR,
+              ),
+              onChanged: (String newValue){
+                setState(() {
+                  DynamicTheme.of(context).setBrightness(newValue==LIGHT?Brightness.light:Brightness.dark);
+                });
+              }, 
+              items: <String>[LIGHT,NIGHT]
+              .map<DropdownMenuItem<String>>((String value){
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child:Text(value)/* ListTile(
+                    title: Text(value),
+                  ),*/
+                );
+              }).toList()
+            )
+          ],
+        ),
+      )
     );
   }
 }

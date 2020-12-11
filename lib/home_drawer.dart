@@ -15,7 +15,10 @@ class MainDrawer extends StatelessWidget{
           leading: Icon(Icons.star,
           color: PRIMARY_COLOR,
           ),
-          title: Text(FAVORITE_VIDEOS),
+          title: Hero(
+            child: Text(FAVORITE_VIDEOS),
+            tag: FAVORITE_VIDEOS,
+          ),
           onTap: (){
             Navigator.pop(context);
             Navigator.push(context,MaterialPageRoute(builder: (context) => VideoListPage(favorite:true,)));

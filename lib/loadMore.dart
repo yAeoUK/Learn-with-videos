@@ -12,18 +12,18 @@ class LoadMore extends StatefulWidget{
 }
 
 class LoadMoreState extends State<LoadMore>{
-  var loading;Future onClick;
+  bool loading;Future onClick;
 
   @override
   void initState() {
     super.initState();
     loading=widget.loading;
     onClick=widget.onClick;
-    //configureLoading();
+    configureLoading();
   }
 
   void configureLoading()async{
-    setState(() {
+    /*setState(() {
       
     });
     if(loading){
@@ -31,13 +31,12 @@ class LoadMoreState extends State<LoadMore>{
       setState(() {
         loading=false;
       });
-    }
+    }*/
   }
 
   @override
   Widget build(BuildContext context) {
-    return CircularProgressIndicator();
-    /*return loading?CircularProgressIndicator(
+    return loading?CircularProgressIndicator(
       backgroundColor: PRIMARY_COLOR,
     ):
     RaisedButton(
@@ -47,6 +46,6 @@ class LoadMoreState extends State<LoadMore>{
        },
       child: Text(LOADING),
       color: PRIMARY_COLOR,
-    );*/
+    );
   }
 }
